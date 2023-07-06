@@ -11,6 +11,9 @@ class RequestValidator
         $vData = [];
         foreach ($this->rules as $key => $rule) {
             $parts = explode("|", $rule);
+            if (!in_array("required", $parts) && !array_key_exists($key, $data)) {
+                continue;
+            }
             foreach ($parts as $part) {
                 $ruleName = $rule = null;
                 if (str_contains($part, "=")) {
@@ -25,13 +28,26 @@ class RequestValidator
                         }
                         break;
                     }
+                    case "int_str": {
+                        if (!$this->validateIntStr($data[$key])) {
+                            throw new UnprocessedEntity("{$key} must be int string.");
+                        }
+                        break;
+                    }
                     case "type": {
                         if (!$this->validateType($rule, $data[$key])) {
                             throw new UnprocessedEntity("{$key} must be {$rule}.");
                         }
                         break;
                     }
+                    case "min": {
+                        if (!$this->validateMin(floatval($rule), $data[$key])) {
+                            throw new UnprocessedEntity("{$key} must greater or equal than {$rule}.");
+                        }
+                    }
                 }
+            }
+            if (array_key_exists($key, $data)) {
                 $vData[$key] = $data[$key];
             }
         }
@@ -43,6 +59,20 @@ class RequestValidator
     }
 
     private function validateRequirement($data, string $key) {
-        return array_key_exists($key, $data) && !empty($data[$key]);
+        if (!array_key_exists($key, $data)) {
+            return false;
+        }
+        if (gettype($data[$key]) === "boolean") {
+            return true;
+        }
+        return !empty($data[$key]);
+    }
+
+    private function validateIntStr($value) {
+        return gettype($value) === "string" && preg_match("/^[0-9]+$/", $value);        
+    }
+
+    private function validateMin($min, $value) {
+        return $value >= $min;
     }
 }

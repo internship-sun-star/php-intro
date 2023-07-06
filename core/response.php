@@ -5,7 +5,7 @@ class HttpResponse
     private int $status = 200;
     private $body = null;
     private array $headers = [];
-    private string $view = "";
+    private array $view = [];
     private bool $needRedirect = false;
 
     public function setHeaders(array $headers)
@@ -26,9 +26,22 @@ class HttpResponse
         return $this;
     }
 
-    public function setCookie(string $key, string $value = "", $expiresIn = 0, $path = "", $domain = "", $secure = false, $httpOnly = false)
+    public function setCookie(string $key, string $value = "", $expires = 0, $path = "", $domain = "", $secure = false, $httpOnly = false)
     {
-        setcookie($key, $value, $expiresIn, $path, $domain, $secure, $httpOnly);
+        setcookie($key, $value, $expires, $path, $domain, $secure, $httpOnly);
+        return $this;
+    }
+
+    public function removeCookie(string $key)
+    {
+        setcookie($key, null, -1);
+        return $this;
+    }
+
+    public function deleteUser()
+    {
+        session_unset();
+        session_destroy();
         return $this;
     }
 
@@ -45,6 +58,24 @@ class HttpResponse
         return $this;
     }
 
+    public function redirect(string $url)
+    {
+        $url = str_starts_with($url, "/") ? substr($url, 1) : $url;
+        $this->headers["Location"] = "http://localhost/php-intro/{$url}";
+        $this->status = 303;
+        $this->needRedirect = true;
+        return $this;
+    }
+
+    public function render(string $view, array $args = [])
+    {
+        $this->view = [
+            "template" => realpath($view),
+            "args" => $args
+        ];
+        return $this;
+    }
+
     public function send()
     {
         if (isset($this->headers)) {
@@ -58,7 +89,8 @@ class HttpResponse
             return;
         }
         if (!empty($this->view)) {
-            return require($this->view);
+            extract($this->view["args"]);
+            return require($this->view["template"]);
         }
         $isJsonBody = gettype($this->body) === "array" or gettype($this->body) === "object";
         if ($isJsonBody) {
@@ -66,22 +98,5 @@ class HttpResponse
             return;
         }
         echo $this->body;
-    }
-
-    public function redirect(string $url, array $args = [])
-    {
-        $url = str_starts_with($url, "/") ? substr($url, 1) : $url;
-        $this->headers["Location"] = "http://localhost/php-intro/{$url}";
-        $this->status = 303;
-        $this->needRedirect = true;
-        $_SESSION["args"] = $args;
-        return $this;
-    }
-
-    public function render(string $view, array $args = [])
-    {
-        $_SESSION["args"] = $args;
-        $this->view = realpath($view);
-        return $this;
     }
 }

@@ -1,14 +1,26 @@
 <?php
 
-class UnLoggedMiddleware extends Middleware {
-    public function canActivate(HttpRequest $req): bool
+class UnLoggedMiddleware extends Middleware
+{
+    public function __construct(private UserService $userService)
     {
-        return !isset($req->user);
     }
 
-    public function handleInactivate(HttpRequest $req)
+    public function canActivate(HttpRequest $req): bool
     {
-        $response = new HttpResponse();
-        return $response->redirect("/");
+        if (!isset($req->user) && !isset($req->cookie["remember_token"])) {
+            return true;
+        }
+        $user = $this->userService->loginByToken($req->cookie["remember_token"]);
+        if (isset($user)) {
+            $_SESSION["user"] = $user;
+            return false;
+        }
+        return true;
+    }
+
+    public function handleInactivate(HttpRequest $req, HttpResponse $res)
+    {
+        return $res->redirect("/");
     }
 }
