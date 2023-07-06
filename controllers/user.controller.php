@@ -2,14 +2,11 @@
 
 class UserController
 {
-    private UserService $service;
-
-    public function __construct()
+    public function __construct(private UserService $userService, private UserTokenService $userTokenService)
     {
-        $this->service = new UserService();
     }
 
-    public function register(HttpRequest $req)
+    public function register(HttpRequest $req, HttpResponse $res)
     {
         $validator = new RequestValidator([
             "full_name" => "required|type=string",
@@ -17,39 +14,32 @@ class UserController
             "password" => "required|type=string"
         ]);
         $vBody = $validator->validate($req->body);
-        $user = $this->service->register($vBody);
-        $res = new HttpResponse();
+        $user = $this->userService->register($vBody);
         return $res->setStatus(201)->json($user);
     }
 
-    public function login(HttpRequest $req)
+    public function login(HttpRequest $req, HttpResponse $res)
     {
         $validator = new RequestValidator([
             "username" => "required|type=string",
             "password" => "required|type=string",
+            "remember" => "required|type=boolean"
         ]);
         $vBody = $validator->validate($req->body);
-        $user = $this->service->login($vBody["username"], $vBody["password"]);
-        $res = new HttpResponse();
+        $user = $this->userService->login($vBody["username"], $vBody["password"]);
+        $rememberToken = $vBody["remember"] ? $this->userTokenService->create($user) : null;
+        if (isset($rememberToken)) {
+            $res->setCookie("remember_token", $rememberToken->token, $rememberToken->expires_at->getTimestamp());
+        }
         return $res->setUser($user);
     }
 
-    public function logout(HttpRequest $req)
+    public function logout(HttpRequest $req, HttpResponse $res)
     {
-        $req->deleteUser();
-        $res = new HttpResponse();
-        return $res->setStatus(204);
-    }
-
-    public function renderLoginPage()
-    {
-        $res = new HttpResponse();
-        return $res->render("views/login.view.php");
-    }
-
-    public function renderHomePage()
-    {
-        $res = new HttpResponse();
-        return $res->render("views/home.view.php");
+        if (isset($req->cookie["remember_token"])) {
+            $this->userTokenService->delete($req->cookie["remember_token"]);
+            $res->removeCookie("remember_token");
+        }
+        return $res->deleteUser()->setStatus(204);
     }
 }

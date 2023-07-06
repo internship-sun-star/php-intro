@@ -22,12 +22,6 @@ class HttpRequest
         $this->user = isset($this->session["user"]) ? $this->session["user"] : null;
         $this->args = isset($this->session["args"]) ? $this->session["args"] : [];
     }
-
-    public function deleteUser()
-    {
-        session_unset();
-        session_destroy();
-    }
 }
 
 function extractBody()
@@ -72,7 +66,7 @@ function extractParams(string $uri, string $pathPattern)
     for ($i = 0; $i < count($uriParts); ++$i) {
         if (preg_match("/^\{.+\}$/", $pathParts[$i])) {
             $paramName = substr($pathParts[$i], 1, -1);
-            $param[$paramName] = $uriParts[$i];
+            $params[$paramName] = $uriParts[$i];
         } else if ($uriParts[$i] !== $pathParts[$i]) {
             return null;
         }

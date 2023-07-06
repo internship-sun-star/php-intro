@@ -2,14 +2,27 @@
 
 class LoggedMiddleware extends Middleware
 {
-    public function canActivate(HttpRequest $req): bool
+    public function __construct(private UserService $userService)
     {
-        return isset($req->user);
     }
 
-    public function handleInactivate(HttpRequest $req)
+    public function canActivate(HttpRequest $req): bool
     {
-        $response = new HttpResponse();
-        return $response->redirect("/login");
+        if (isset($req->user)) {
+            return true;
+        }
+        if (isset($req->cookie["remember_token"])) {
+            $user = $this->userService->loginByToken($req->cookie["remember_token"]);
+            if (isset($user)) {
+                $_SESSION["user"] = $user;
+            }
+            return isset($user);
+        }
+        return false;
+    }
+
+    public function handleInactivate(HttpRequest $req, HttpResponse $res)
+    {
+        return $res->redirect("/login");
     }
 }

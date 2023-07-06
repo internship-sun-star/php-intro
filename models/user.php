@@ -6,8 +6,8 @@ class User extends Model
     public ?string $full_name;
     public ?string $username;
     public ?string $password;
-    public ?DateTimeImmutable $created_at;
-    public ?DateTimeImmutable $updated_at;
+    public ?DateTimeInterface $created_at;
+    public ?DateTimeInterface $updated_at;
 
     public function jsonSerialize()
     {

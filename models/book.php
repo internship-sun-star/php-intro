@@ -8,6 +8,6 @@ class Book extends Model
     public ?int $published_year;
     public ?float $price;
     public ?int $user_id;
-    public ?DateTimeImmutable $created_at;
-    public ?DateTimeImmutable $updated_at;
+    public ?DateTimeInterface $created_at;
+    public ?DateTimeInterface $updated_at;
 }
