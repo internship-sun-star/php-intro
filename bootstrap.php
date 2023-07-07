@@ -1,8 +1,7 @@
 <?php
 require_once __DIR__ . "/connections/db.php";
 
-require_once __DIR__ . "/exceptions/HttpException.php";
-
+require_once __DIR__ . "/core/http-exception.php";
 require_once __DIR__ . "/core/request.php";
 require_once __DIR__ . "/core/response.php";
 require_once __DIR__ . "/core/validator.php";
@@ -18,8 +17,8 @@ require_once __DIR__ . "/services/user_token.service.php";
 require_once __DIR__ . "/services/book.service.php";
 
 require_once __DIR__ . "/middlewares/middleware.php";
-require_once __DIR__ . "/middlewares/logged.php";
-require_once __DIR__ . "/middlewares/unlogged.php";
+require_once __DIR__ . "/middlewares/authorized.php";
+require_once __DIR__ . "/middlewares/unauthorized.php";
 
 require_once __DIR__ . "/controllers/user.controller.php";
 require_once __DIR__ . "/controllers/book.controller.php";

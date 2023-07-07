@@ -45,7 +45,7 @@ class BookService extends Service
     public function find(array $query, $limit = 100, $offset = 0)
     {
         $whereStr = count($query) > 0 ? join(" AND ", array_map(fn ($key) => "{$key} = ?", array_keys($query))) : "1=1";
-        $stmt = $this->db->prepare("SELECT * FROM books WHERE {$whereStr} LIMIT {$offset}, {$limit}");
+        $stmt = $this->db->prepare("SELECT * FROM books WHERE {$whereStr} ORDER BY id DESC LIMIT {$offset}, {$limit}");
         $stmt->setFetchMode(PDO::FETCH_ASSOC);
         $stmt->execute(array_values($query));
         $books = [];

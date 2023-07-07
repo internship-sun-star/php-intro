@@ -55,7 +55,11 @@ class RequestValidator
     }
 
     private function validateType(string $type, $value) {
-        return gettype($value) === $type;
+        $valueType = gettype($value);
+        if ($type === "double") {
+            return $valueType === "double" || $valueType === "integer";
+        }
+        return $valueType === $type;
     }
 
     private function validateRequirement($data, string $key) {
